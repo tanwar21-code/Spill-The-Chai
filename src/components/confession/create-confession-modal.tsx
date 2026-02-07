@@ -72,7 +72,11 @@ export function CreateConfessionModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="rounded-full shadow-lg gap-2 text-md font-semibold bg-primary hover:bg-primary/90">
+        <Button 
+            size="lg" 
+            className="rounded-full shadow-lg gap-2 text-md font-semibold bg-primary hover:bg-primary/90"
+            suppressHydrationWarning
+        >
             <PenLine className="h-5 w-5" />
             Spill The Chai
         </Button>
