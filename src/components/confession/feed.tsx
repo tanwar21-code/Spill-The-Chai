@@ -126,7 +126,7 @@ export function Feed() {
 
       const channel = supabase
         .channel('public:confessions')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'confessions' }, (payload) => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'confessions' }, (payload: any) => {
             setConfessions(prev => [payload.new as Confession, ...prev])
         })
         .subscribe()
