@@ -79,7 +79,7 @@ export function Feed() {
 
       // Votes fetching logic...
       if (user && data && data.length > 0) {
-        const confessionIds = data.map(c => c.id)
+        const confessionIds = data.map((c: Confession) => c.id)
         const { data: votesData, error: votesError } = await supabase
             .from('votes')
             .select('confession_id, vote_type')
