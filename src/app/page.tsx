@@ -1,5 +1,6 @@
 
 import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { Feed } from '@/components/confession/feed'
 import { CreateConfessionModal } from '@/components/confession/create-confession-modal'
 import React from 'react'
@@ -32,9 +33,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="py-6 border-t text-center text-sm text-muted-foreground bg-muted/30">
-        <p>© {new Date().getFullYear()} Spill The Chai. Brewed with ❤️ by AI.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -1,7 +1,6 @@
-
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Confession } from '@/types'
 import { ConfessionCard } from '@/components/confession/confession-card'
@@ -18,6 +17,7 @@ export function Feed() {
   const [hasMore, setHasMore] = useState(true)
   const [page, setPage] = useState(0)
   const [userVotes, setUserVotes] = useState<Record<string, 1 | -1>>({})
+  const [sortMethod, setSortMethod] = useState<'latest' | 'trending'>('latest')
   
   const supabase = createClient()
   const { user } = useAuth()
@@ -25,6 +25,16 @@ export function Feed() {
   const searchQuery = searchParams.get('q') // Read search query
   
   const PAGE_SIZE = 10
+
+  // Toggle sort method
+  const handleSortChange = (method: 'latest' | 'trending') => {
+      if (sortMethod === method) return
+      setSortMethod(method)
+      setPage(0)
+      setConfessions([]) // Clear current list
+      setHasMore(true)
+      setIsLoading(true)
+  }
 
   const fetchConfessions = useCallback(async (pageNumber: number, isNewSearch = false) => {
     try {
@@ -34,8 +44,15 @@ export function Feed() {
       let query = supabase
         .from('confessions')
         .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(from, to)
+      
+      // Apply sort
+      if (sortMethod === 'trending') {
+          query = query.order('upvotes', { ascending: false })
+      } else {
+          query = query.order('created_at', { ascending: false })
+      }
+      
+      query = query.range(from, to)
 
       // Apply search filter if exists
       if (searchQuery) {
@@ -76,8 +93,6 @@ export function Feed() {
             votesData.forEach((v: any) => {
                 newVotes[v.confession_id] = v.vote_type
             })
-            // If new search, we might want to reset userVotes or just merge? 
-            // Merge is safer but might grow indefinitely. For MVP fine.
             setUserVotes(prev => ({...prev, ...newVotes}))
         }
       }
@@ -88,15 +103,15 @@ export function Feed() {
     } finally {
       setIsLoading(false)
     }
-  }, [supabase, user, searchQuery]) 
+  }, [supabase, user, searchQuery, sortMethod]) 
 
-  // Reset and fetch when search query changes
+  // Reset and fetch when search query or sort method changes
   useEffect(() => {
       setPage(0)
-      setHasMore(true) // Reset hasMore optimization
+      setHasMore(true) 
       setIsLoading(true)
       fetchConfessions(0, true)
-  }, [searchQuery, fetchConfessions])
+  }, [searchQuery, sortMethod, fetchConfessions])
 
   const loadMore = async () => {
       const nextPage = page + 1
@@ -105,12 +120,9 @@ export function Feed() {
   }
   
   // Real-time subscription 
-  // Disable real-time updates when searching to avoid confusion?
-  // Or valid: if a new confession matches search, it should appear.
-  // But real-time logic only gives new row. We don't know if it matches filter without checking.
-  // For MVP, maybe disable real-time during search or only enable if no search.
   useEffect(() => {
-      if (searchQuery) return; // Disable realtime on search results for simplicity
+      if (searchQuery) return; 
+      if (sortMethod === 'trending') return;
 
       const channel = supabase
         .channel('public:confessions')
@@ -120,13 +132,17 @@ export function Feed() {
         .subscribe()
 
       return () => {
-          supabase.removeChannel(channel)
+         supabase.removeChannel(channel)
       }
-  }, [supabase, searchQuery])
+  }, [supabase, searchQuery, sortMethod])
 
   if (isLoading && page === 0) {
     return (
       <div className="space-y-4">
+        <div className="flex gap-2 mb-4">
+             <Skeleton className="h-9 w-20" />
+             <Skeleton className="h-9 w-20" />
+        </div>
         {[1, 2, 3].map((i) => (
           <div key={i} className="space-y-3">
              <Skeleton className="h-[120px] w-full rounded-xl" />
@@ -156,18 +172,62 @@ export function Feed() {
             </div>
         )
     }
+    // Only show empty state if not loading (though loading check above handles init)
     return (
-      <div className="flex flex-col items-center justify-center space-y-4 py-12 text-center">
-         <div className="text-4xl">☕</div>
-         <h3 className="text-xl font-semibold">Be the first to spill the chai!</h3>
-         <p className="text-muted-foreground">No confessions yet. Why not start the conversation?</p>
+      <div className="space-y-6 pb-8">
+        {!searchQuery && (
+            <div className="flex items-center gap-2 mb-4">
+                <Button 
+                    variant={sortMethod === 'latest' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => handleSortChange('latest')}
+                    className="rounded-full"
+                >
+                    Latest
+                </Button>
+                <Button 
+                    variant={sortMethod === 'trending' ? 'default' : 'outline'} 
+                    size="sm"
+                    onClick={() => handleSortChange('trending')}
+                    className="rounded-full"
+                >
+                    Trending
+                </Button>
+            </div>
+        )}
+        <div className="flex flex-col items-center justify-center space-y-4 py-12 text-center">
+            <div className="text-4xl">☕</div>
+            <h3 className="text-xl font-semibold">Be the first to spill the chai!</h3>
+            <p className="text-muted-foreground">No confessions yet. Why not start the conversation?</p>
+        </div>
       </div>
     )
   }
 
-
   return (
     <div className="space-y-6 pb-8">
+      {/* Filters */}
+      {!searchQuery && (
+          <div className="flex items-center gap-2 mb-4">
+              <Button 
+                variant={sortMethod === 'latest' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => handleSortChange('latest')}
+                className="rounded-full"
+              >
+                  Latest
+              </Button>
+              <Button 
+                variant={sortMethod === 'trending' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => handleSortChange('trending')}
+                className="rounded-full"
+              >
+                  Trending
+              </Button>
+          </div>
+      )}
+
       {confessions.map((confession) => (
         <ConfessionCard 
             key={confession.id} 

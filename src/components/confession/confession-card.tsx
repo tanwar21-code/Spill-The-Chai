@@ -4,13 +4,14 @@
 import { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowBigUp, ArrowBigDown, Clock, Share2 } from 'lucide-react'
+import { ArrowBigUp, ArrowBigDown, Clock, Flag } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Confession } from '@/types'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/auth-context'
 import { toast } from 'sonner' 
+import { ReportModal } from '@/components/moderation/report-modal' 
 
 interface ConfessionCardProps {
   confession: Confession
@@ -99,46 +100,62 @@ export function ConfessionCard({ confession, userVote: initialUserVote }: Confes
     }
   }
 
-  return (
-    <Card className="w-full transition-all hover:shadow-md border-border bg-card">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
-         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          <span>{formatDistanceToNow(new Date(confession.created_at), { addSuffix: true })}</span>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 pt-0">
-        <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground/90 font-medium">
-          {confession.content}
-        </p>
-      </CardContent>
-      <CardFooter className="p-4 pt-2 flex items-center justify-between border-t bg-muted/20">
-         <div className="flex items-center gap-1">
-             <Button
-                variant="ghost" 
-                size="sm" 
-                className={cn("h-8 px-2 rounded-full gap-1 hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900/30 transition-colors", userVote === 1 && "bg-green-100 text-green-700 dark:bg-green-900/30")}
-                onClick={() => handleVote(1)}
-             >
-                 <ArrowBigUp className={cn("h-6 w-6", userVote === 1 && "fill-current")} />
-                 <span className="font-bold text-sm">{upvotes}</span>
-             </Button>
+  const [isReportOpen, setIsReportOpen] = useState(false)
 
-             <Button
-                variant="ghost" 
-                size="sm" 
-                className={cn("h-8 px-2 rounded-full gap-1 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/30 transition-colors", userVote === -1 && "bg-red-100 text-red-700 dark:bg-red-900/30")}
-                onClick={() => handleVote(-1)}
-             >
-                 <ArrowBigDown className={cn("h-6 w-6", userVote === -1 && "fill-current")} />
-                 <span className="font-bold text-sm">{downvotes}</span>
-             </Button>
-         </div>
-         
-         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground">
-             <Share2 className="h-4 w-4" />
-         </Button>
-      </CardFooter>
-    </Card>
+  return (
+    <>
+      <Card className="w-full transition-all hover:shadow-md border-border bg-card">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
+           <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            <span>{formatDistanceToNow(new Date(confession.created_at), { addSuffix: true })}</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+            onClick={() => setIsReportOpen(true)}
+          >
+            <Flag className="h-3 w-3" />
+            <span className="sr-only">Report</span>
+          </Button>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <p className="whitespace-pre-wrap text-base leading-relaxed text-foreground/90 font-medium">
+            {confession.content}
+          </p>
+        </CardContent>
+        <CardFooter className="p-4 pt-2 flex items-center justify-between border-t bg-muted/20">
+           <div className="flex items-center gap-1">
+               <Button
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn("h-8 px-2 rounded-full gap-1 hover:bg-green-100 hover:text-green-700 dark:hover:bg-green-900/30 transition-colors", userVote === 1 && "bg-green-100 text-green-700 dark:bg-green-900/30")}
+                  onClick={() => handleVote(1)}
+               >
+                   <ArrowBigUp className={cn("h-6 w-6", userVote === 1 && "fill-current")} />
+                   <span className="font-bold text-sm">{upvotes}</span>
+               </Button>
+  
+               <Button
+                  variant="ghost" 
+                  size="sm" 
+                  className={cn("h-8 px-2 rounded-full gap-1 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-900/30 transition-colors", userVote === -1 && "bg-red-100 text-red-700 dark:bg-red-900/30")}
+                  onClick={() => handleVote(-1)}
+               >
+                   <ArrowBigDown className={cn("h-6 w-6", userVote === -1 && "fill-current")} />
+                   <span className="font-bold text-sm">{downvotes}</span>
+               </Button>
+           </div>
+           
+        </CardFooter>
+      </Card>
+      
+      <ReportModal 
+         isOpen={isReportOpen}
+         onClose={() => setIsReportOpen(false)}
+         confessionId={confession.id}
+      />
+    </>
   )
 }
