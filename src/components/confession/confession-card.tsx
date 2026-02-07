@@ -1,10 +1,9 @@
-
 'use client'
 
 import { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowBigUp, ArrowBigDown, Clock, Flag } from 'lucide-react'
+import { ArrowBigUp, ArrowBigDown, Clock, Flag, MessageCircle } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { Confession } from '@/types'
 import { cn } from '@/lib/utils'
@@ -12,6 +11,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/auth-context'
 import { toast } from 'sonner' 
 import { ReportModal } from '@/components/moderation/report-modal' 
+import { CommentList } from '@/components/comments/comment-list'
 
 interface ConfessionCardProps {
   confession: Confession
@@ -23,6 +23,7 @@ export function ConfessionCard({ confession, userVote: initialUserVote }: Confes
   const [downvotes, setDownvotes] = useState(confession.downvotes)
   const [userVote, setUserVote] = useState<1 | -1 | null>(initialUserVote || null)
   const [isVoting, setIsVoting] = useState(false)
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false)
   const { user } = useAuth()
   const supabase = createClient()
 
@@ -148,7 +149,22 @@ export function ConfessionCard({ confession, userVote: initialUserVote }: Confes
                </Button>
            </div>
            
+           <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 rounded-full text-muted-foreground hover:text-foreground gap-1.5"
+                onClick={() => setIsCommentsOpen(!isCommentsOpen)}
+           >
+               <MessageCircle className="h-4 w-4" />
+               <span className="text-xs font-medium">Comments</span>
+           </Button>
         </CardFooter>
+        
+        {isCommentsOpen && (
+            <div className="px-4 pb-4">
+                <CommentList confessionId={confession.id} />
+            </div>
+        )}
       </Card>
       
       <ReportModal 

@@ -21,3 +21,11 @@ export type Vote = {
   vote_type: 1 | -1
   created_at: string
 }
+
+export type Comment = {
+  id: string
+  confession_id: string
+  parent_id: string | null
+  content: string
+  created_at: string
+}
