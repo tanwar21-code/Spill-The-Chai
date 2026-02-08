@@ -7,49 +7,45 @@ export async function updateSession(request: NextRequest) {
     request,
   })
 
-  // Create the Supabase client
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              request.cookies.set(name, value)
+            )
+            
+            supabaseResponse = NextResponse.next({
+              request,
+            })
+            
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
+          },
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          )
-          
-          // Reset the response to include the new cookies in the request
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
+      }
+    )
+
+    // IMPORTANT: You *must* return the supabaseResponse object as it is.
+    await supabase.auth.getUser()
+
+    return supabaseResponse
+  } catch (e) {
+    // If you are here, a Supabase client could not be created!
+    // This is likely because the cookie is invalid.
+    // Instead of crashing, we return the initial response, effectively signing out the user
+    // or treating them as anonymous.
+    return NextResponse.next({
+      request: {
+        headers: request.headers,
       },
-    }
-  )
-
-  // Use getUser() to validate the user session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    // optional: redirect to login if no user
-    // const url = request.nextUrl.clone()
-    // url.pathname = '/login'
-    // return NextResponse.redirect(url)
+    })
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  return supabaseResponse
 }
