@@ -16,17 +16,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Spill The Chai - Anonymous Confessions",
   description: "Share your thoughts anonymously with your college community.",
-  manifest: "/manifest.json",
-  themeColor: "#8b4513",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  icons: {
-    icon: "/abcd.png",
-    apple: "/abcd.png",
-  }
 };
 
 export default function RootLayout({
