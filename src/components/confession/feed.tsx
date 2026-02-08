@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { AlertCircle, SearchX } from 'lucide-react'
 import { useAuth } from '@/context/auth-context'
 import { useSearchParams } from 'next/navigation'
+import { useRefresh } from '@/context/refresh-context'
 
 export function Feed() {
   const [confessions, setConfessions] = useState<Confession[]>([])
@@ -23,6 +24,7 @@ export function Feed() {
   const { user } = useAuth()
   const searchParams = useSearchParams()
   const searchQuery = searchParams.get('q') // Read search query
+  const { refreshKey } = useRefresh()
   
   const PAGE_SIZE = 10
 
@@ -105,13 +107,13 @@ export function Feed() {
     }
   }, [supabase, user, searchQuery, sortMethod]) 
 
-  // Reset and fetch when search query or sort method changes
+  // Reset and fetch when search query, sort method, or refreshKey changes
   useEffect(() => {
       setPage(0)
       setHasMore(true) 
       setIsLoading(true)
       fetchConfessions(0, true)
-  }, [searchQuery, sortMethod, fetchConfessions])
+  }, [searchQuery, sortMethod, refreshKey, fetchConfessions])
 
   const loadMore = async () => {
       const nextPage = page + 1

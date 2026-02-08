@@ -4,11 +4,15 @@
 import { AuthProvider } from '@/context/auth-context'
 import { Toaster } from 'sonner'
 
+import { RefreshProvider } from '@/context/refresh-context'
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      {children}
-      <Toaster />
-    </AuthProvider>
+    <RefreshProvider>
+      <AuthProvider>
+        {children}
+        <Toaster />
+      </AuthProvider>
+    </RefreshProvider>
   )
 }

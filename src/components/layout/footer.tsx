@@ -4,10 +4,10 @@ import Link from 'next/link'
 import { RotateCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+import { useRefresh } from '@/context/refresh-context'
+
 export function Footer() {
-  const handleReload = () => {
-    window.location.reload()
-  }
+  const { triggerRefresh } = useRefresh()
 
   return (
     <footer className="py-6 border-t text-center text-sm text-muted-foreground bg-muted/30 flex flex-col items-center gap-3">
@@ -22,10 +22,10 @@ export function Footer() {
             variant="ghost" 
             size="sm" 
             className="h-6 text-xs gap-1 text-muted-foreground hover:text-foreground"
-            onClick={handleReload}
+            onClick={triggerRefresh}
         >
             <RotateCw className="h-3 w-3" />
-            Reload Page
+            Refresh Page
         </Button>
       </div>
     </footer>
