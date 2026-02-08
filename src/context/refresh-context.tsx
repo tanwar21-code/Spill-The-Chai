@@ -16,20 +16,32 @@ export function RefreshProvider({ children }: { children: ReactNode }) {
     setRefreshKey(prev => prev + 1)
   }, [])
 
-  // Prevent accidental reloads
+  // Prevent accidental reloads and intercept shortcuts
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault()
-      e.returnValue = '' // Chrome requires returnValue to be set
-      return '' // Most modern browsers ignore message but require return
+      e.returnValue = '' 
+      return '' 
     }
     
+    const handleKeyDown = (e: KeyboardEvent) => {
+        // Intercept F5 or Ctrl+R / Cmd+R
+        if ((e.key === 'F5') || ((e.ctrlKey || e.metaKey) && e.key === 'r')) {
+            e.preventDefault()
+            triggerRefresh()
+            // Optional: Show a toast or logs to indicate soft refresh happened
+            console.log('Soft refresh triggered via shortcut')
+        }
+    }
+
     window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('keydown', handleKeyDown)
     
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [])
+  }, [triggerRefresh])
 
   return (
     <RefreshContext.Provider value={{ refreshKey, triggerRefresh }}>
