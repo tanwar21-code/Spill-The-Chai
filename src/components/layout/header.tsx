@@ -4,10 +4,11 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/context/auth-context'
+import { useRefresh } from '@/context/refresh-context'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AuthModal } from '@/components/auth/auth-modal'
-import { LogOut, User, Search, X } from 'lucide-react'
+import { LogOut, User, Search, X, RefreshCcw } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import {
@@ -20,6 +21,7 @@ import {
 
 export function Header() {
   const { user, profile, signOut, isLoading } = useAuth()
+  const { hardRefresh } = useRefresh()
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false) // For mobile toggling if needed, or just show always 
   
@@ -97,6 +99,17 @@ export function Header() {
           </div>
           
           <nav className="flex items-center gap-2 md:gap-4 shrink-0">
+            {/* Hard Refresh Button - Mobile & Desktop */}
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-muted-foreground hover:text-destructive"
+                onClick={hardRefresh}
+                title="Hard Refresh (Ctrl+Shift+R)"
+            >
+                <RefreshCcw className="h-5 w-5" />
+            </Button>
+
             {/* Mobile Search Toggle */}
             <Button 
                 variant="ghost" 
