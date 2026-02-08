@@ -9,7 +9,7 @@ import {
   ReactNode,
 } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User, Session, AuthChangeEvent } from '@supabase/supabase-js'
+import { User, Session } from '@supabase/supabase-js'
 import { UserProfile } from '@/types'
 import { useRouter } from 'next/navigation'
 
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       
