@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Comment } from '@/types'
-import { formatDistanceToNow } from 'date-fns'
+import { RelativeTime } from '@/components/ui/relative-time'
 import { Button } from '@/components/ui/button'
 import { MessageCircle } from 'lucide-react'
 import { CommentForm } from './comment-form'
@@ -30,7 +30,7 @@ export function CommentItem({ comment, confessionId, depth = 0, refreshComments 
              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="font-bold text-primary">Anonymous</span>
                 <span className="text-[10px]">•</span>
-                <span>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
+                <RelativeTime date={comment.created_at} />
              </div>
         </div>
 

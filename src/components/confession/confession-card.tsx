@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowBigUp, ArrowBigDown, Clock, Flag, MessageCircle } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { RelativeTime } from '@/components/ui/relative-time'
 import { Confession } from '@/types'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/context/auth-context'
-import { toast } from 'sonner' 
-import { ReportModal } from '@/components/moderation/report-modal' 
+import { toast } from 'sonner'
+import { ReportModal } from '@/components/moderation/report-modal'
 import { CommentList } from '@/components/comments/comment-list'
 
 interface ConfessionCardProps {
@@ -109,7 +109,7 @@ export function ConfessionCard({ confession, userVote: initialUserVote }: Confes
         <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 pb-2">
            <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            <span>{formatDistanceToNow(new Date(confession.created_at), { addSuffix: true })}</span>
+            <RelativeTime date={confession.created_at} />
           </div>
           <Button 
             variant="ghost" 
