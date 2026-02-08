@@ -18,6 +18,7 @@ type AuthContextType = {
   session: Session | null
   profile: UserProfile | null
   isLoading: boolean
+  authReady: boolean
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -50,10 +51,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  /* 
+    FIX: Separate "auth ready" from "loading". 
+    loading = initial profile fetch
+    authReady = session determined (logged in or guest)
+  */
+  const [authReady, setAuthReady] = useState(false)
+
   useEffect(() => {
     let mounted = true
 
-    const restoreSession = async () => {
+    const init = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession()
         
@@ -62,40 +70,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (mounted) {
-          setSession(session)
-          setUser(session?.user ?? null)
-          if (session?.user) {
+           if (session) {
+             setSession(session)
+             setUser(session.user)
              await fetchProfile(session.user.id)
-          }
-           // Only set loading to false here if we aren't waiting for profile? 
-           // actually profile fetch is async inside.
-           // Let's keep it simple: if session exists, we fetch profile.
+           }
+           setAuthReady(true)
+           setIsLoading(false)
         }
       } catch (err) {
          console.error('Unexpected error in restoreSession:', err)
-      } finally {
-        if (mounted) setIsLoading(false)
+         if (mounted) {
+             setAuthReady(true)
+             setIsLoading(false)
+         }
       }
     }
 
-    restoreSession()
+    init()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return
 
-      setSession(session)
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        setIsLoading(true) // Briefly load profile
-        await fetchProfile(session.user.id)
-        setIsLoading(false)
-      } else {
+      // FIX: Never overwrite valid session with null unless SIGNED_OUT
+      if (event === 'SIGNED_OUT') {
+        setSession(null)
+        setUser(null)
         setProfile(null)
-        setIsLoading(false)
+        // router.refresh() // Optional: force refresh on logout
+        return
       }
+
+      if (session) {
+        setSession(session)
+        setUser(session.user)
+        
+        // Refresh profile if user changed or just to be safe
+        if (session.user.id !== user?.id) {
+            await fetchProfile(session.user.id)
+        }
+      }
+      
+      setAuthReady(true)
     })
 
     return () => {
@@ -122,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         isLoading,
+        authReady,
         signOut,
         refreshProfile,
       }}

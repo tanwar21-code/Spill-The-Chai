@@ -22,7 +22,8 @@ export function Feed() {
   const [sortMethod, setSortMethod] = useState<'latest' | 'trending'>('latest')
   
   const supabase = createClient()
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, authReady } = useAuth()
+  const authLoading = !authReady // Map authReady to loading state for gate
   const searchParams = useSearchParams()
   const searchQuery = searchParams.get('q') // Read search query
   const { refreshKey } = useRefresh()
