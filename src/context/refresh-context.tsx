@@ -5,7 +5,6 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 type RefreshContextType = {
   refreshKey: number
   triggerRefresh: () => void
-  hardReset: () => void
 }
 
 const RefreshContext = createContext<RefreshContextType | undefined>(undefined)
@@ -15,38 +14,6 @@ export function RefreshProvider({ children }: { children: ReactNode }) {
 
   const triggerRefresh = useCallback(() => {
     setRefreshKey(prev => prev + 1)
-  }, [])
-
-  const hardReset = useCallback(async () => {
-      try {
-          // 1. Clear Local & Session Storage
-          if (typeof window !== 'undefined') {
-              window.localStorage.clear()
-              window.sessionStorage.clear()
-          }
-
-          // 2. Clear Browser Cache (Service Workers, etc)
-          if ('caches' in window) {
-              const keys = await caches.keys()
-              await Promise.all(keys.map(key => caches.delete(key)))
-          }
-          
-          // 3. Unregister Service Workers
-          if ('serviceWorker' in navigator) {
-              const registrations = await navigator.serviceWorker.getRegistrations()
-              for (const registration of registrations) {
-                  await registration.unregister()
-              }
-          }
-
-          console.log('App data reset complete.')
-          
-          // 4. Force Reload
-          window.location.reload()
-      } catch (error) {
-          console.error("Reset failed:", error)
-          window.location.reload() // Reload anyway
-      }
   }, [])
 
   // Prevent accidental reloads and intercept shortcuts
@@ -77,7 +44,7 @@ export function RefreshProvider({ children }: { children: ReactNode }) {
   }, [triggerRefresh])
 
   return (
-    <RefreshContext.Provider value={{ refreshKey, triggerRefresh, hardReset }}>
+    <RefreshContext.Provider value={{ refreshKey, triggerRefresh }}>
       {children}
     </RefreshContext.Provider>
   )

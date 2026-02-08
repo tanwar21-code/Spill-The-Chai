@@ -10,6 +10,7 @@ import { AlertCircle, SearchX } from 'lucide-react'
 import { useAuth } from '@/context/auth-context'
 import { useSearchParams } from 'next/navigation'
 import { useRefresh } from '@/context/refresh-context'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export function Feed() {
   const [confessions, setConfessions] = useState<Confession[]>([])
@@ -21,7 +22,7 @@ export function Feed() {
   const [sortMethod, setSortMethod] = useState<'latest' | 'trending'>('latest')
   
   const supabase = createClient()
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const searchParams = useSearchParams()
   const searchQuery = searchParams.get('q') // Read search query
   const { refreshKey } = useRefresh()
@@ -40,6 +41,8 @@ export function Feed() {
 
   const fetchConfessions = useCallback(async (pageNumber: number, isNewSearch = false) => {
     try {
+      if (isNewSearch) setError(null)
+
       const from = pageNumber * PAGE_SIZE
       const to = from + PAGE_SIZE - 1
       
@@ -109,11 +112,13 @@ export function Feed() {
 
   // Reset and fetch when search query, sort method, or refreshKey changes
   useEffect(() => {
+      if (authLoading) return
+
       setPage(0)
       setHasMore(true) 
       setIsLoading(true)
       fetchConfessions(0, true)
-  }, [searchQuery, sortMethod, refreshKey, fetchConfessions])
+  }, [searchQuery, sortMethod, refreshKey, fetchConfessions, authLoading])
 
   const loadMore = async () => {
       const nextPage = page + 1
@@ -137,6 +142,10 @@ export function Feed() {
          supabase.removeChannel(channel)
       }
   }, [supabase, searchQuery, sortMethod])
+
+  if (authLoading) {
+      return <LoadingSpinner />
+  }
 
   if (isLoading && page === 0) {
     return (

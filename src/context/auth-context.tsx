@@ -51,22 +51,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    let mounted = true
+
+    const restoreSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+           console.error('Error restoring session:', error)
+        }
+
+        if (mounted) {
+          setSession(session)
+          setUser(session?.user ?? null)
+          if (session?.user) {
+             await fetchProfile(session.user.id)
+          }
+           // Only set loading to false here if we aren't waiting for profile? 
+           // actually profile fetch is async inside.
+           // Let's keep it simple: if session exists, we fetch profile.
+        }
+      } catch (err) {
+         console.error('Unexpected error in restoreSession:', err)
+      } finally {
+        if (mounted) setIsLoading(false)
+      }
+    }
+
+    restoreSession()
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return
+
       setSession(session)
       setUser(session?.user ?? null)
       
       if (session?.user) {
+        setIsLoading(true) // Briefly load profile
         await fetchProfile(session.user.id)
+        setIsLoading(false)
       } else {
         setProfile(null)
+        setIsLoading(false)
       }
-      
-      setIsLoading(false)
     })
 
     return () => {
+      mounted = false
       subscription.unsubscribe()
     }
   }, [supabase])
