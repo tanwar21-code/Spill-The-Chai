@@ -61,27 +61,6 @@ export function Feed() {
           query = query.ilike('content', `%${searchQuery}%`)
       }
 
-      const CACHE_KEY = 'confessions-cache'
-      const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
-
-      // Only use cache for default view (no search, latest sort) and initial load (refreshKey === 0)
-      const useCache = !searchQuery && sortMethod === 'latest' && refreshKey === 0 && pageNumber === 0
-
-      if (useCache) {
-          const cached = localStorage.getItem(CACHE_KEY)
-          if (cached) {
-              const parsed = JSON.parse(cached)
-              const age = Date.now() - parsed.timestamp
-              if (age < CACHE_DURATION) {
-                  console.log('Using cached confessions')
-                  setConfessions(parsed.data)
-                  setHasMore(true) // Assuming more exists if we have cache
-                  setIsLoading(false)
-                  return // Skip fetch
-              }
-          }
-      }
-
       const { data, error, count } = await query
 
       if (error) throw error
@@ -89,13 +68,6 @@ export function Feed() {
       if (data) {
         if (pageNumber === 0 || isNewSearch) {
            setConfessions(data)
-           // Save to cache if this is the default view
-           if (!searchQuery && sortMethod === 'latest') {
-               localStorage.setItem(CACHE_KEY, JSON.stringify({
-                   data: data,
-                   timestamp: Date.now()
-               }))
-           }
         } else {
            setConfessions(prev => [...prev, ...data])
         }
